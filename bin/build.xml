@@ -1,0 +1,864 @@
+<!-- jOggPlayer ant build file-->
+
+<!-- TARGETS -->
+<!-- to build the jars and the zip file  : distributionSource -->
+<!-- to build a new jar   : newJar-->
+<!-- To Build a new installer version (needs the izpack Library : installer -->
+
+
+<project name="jOggPlayer"
+      default="buildJars"
+      basedir=".">
+
+  <property file="../joggplayer.build.props"/>
+
+  <property name="appName"            value="jOggPlayer"/>
+  <property name="shortAppName"       value="jOgg"/>
+  <property name="version"            value="116"/>
+  <!-- buildPlatform is NOT used yet so ignore -->
+  <property name="buildPlatform"      value="warp"/>
+
+  <!-- The following dirs are where I get the source files from to build the
+       jOggPlayer Distribution package -->
+  <!-- The end user/developer will not need to use/change these because ALL
+       required sorce files will be included in the ditribution src directory-->
+  <property name="rootLibDir"         value="/home/tgutwin/dev/lib"/>
+  <property name="srcRoot"            value="/home/tgutwin/dev/work"/>
+  <property name="packageDir"         value="/usr/lib/pkgs"/>
+  <property name="buildDir"           value="${basedir}/build"/>
+  <property name="distributionDir"    value="${basedir}/distrib"/>
+  <property name="izPackHomeDir"      value="${rootLibDir}/izPack/latest"/>
+
+<!-- Allows us to use the IzPack Ant task -->
+<taskdef name="izpack"
+         classpath="${izPackHomeDir}/lib/compiler.jar"
+         classname="com.izforge.izpack.ant.IzPackTask"/>
+
+
+
+  <target name="splashGraphic">
+    <splash imageurl="http://www.webarts.bc.ca/images/WebArtsTransparentLogoNoBackLarge.png"
+           showduration="250"/>
+  </target>
+
+
+  <target name="help">
+    <echo>
+---  jOggPlayer Ant Build File  ---
+
+  TARGETS (that you might want to use):
+    > compilejOggPlayer - compiles all WebARTS files required for jOggPlayer
+                          into the build/classes dir
+    > newjOggJar - compiles and builds a new jOggPlayer Jar
+    > newAutojOggJar - compiles and builds a new AutoUpdatingJOggPlayer Jar
+    > buildJar - compiles and builds BOTH previous 2 Jars
+    > buildInstaller - compiles and builds The installer jar file
+    > help - DEFAULT target prints this message
+    > cleanDist - deletes the ditrib dir
+    > rebuildjOggPlayer - deletes the distrib dir AND then compiles and builds
+                          a new jOggPlayer Jar
+    > rebuildAutojOggPlayer - deletes the distrib dir AND then compiles and
+                              builds a new AutoUpdatingJOggPlayer Jar
+    > rebuildJars - deletes the distrib dir AND then compiles and builds
+                    BOTH previous 2 Jars
+
+    Questions... email jOggPlayer@webarts.bc.ca
+    </echo>
+  </target>
+
+
+  <target name="init" depends="splashGraphic"
+          description="Initializes all the Ant properties used before building from the distributions src. (ie the end user)">
+    <!-- Create the time stamp
+         Sets the DSTAMP, TSTAMP, and TODAY properties in the current project.
+         By default, the DSTAMP property is in the format "yyyyMMdd",
+         TSTAMP is in the format "hhmm", and TODAY is in the format
+         "MMMM dd yyyy". -->
+    <tstamp/>
+
+    <!-- set as muany relative items as possible -->
+    <!--property name="classes"          value="${packageDir}"/-->
+    <property name="playerFile"       value="jOggPlayer.java"/>
+    <property name="autoPlayerFile"   value="JOggPlayerAutoUpdating.java"/>
+    <property name="includeJars"      value="${jOrbisJar};${kiwiJar}"/>
+
+    <!--mkdir dir="${baseDir}/build"/>
+    <mkdir dir="${baseDir}/build/classes"/-->
+  </target>
+
+
+  <target name="-distributionInit"
+          depends="splashGraphic"
+          description="Initializes all the Ant properties used before building a distribution.">
+    <!-- Create the time stamp
+         Sets the DSTAMP, TSTAMP, and TODAY properties in the current project.
+         By default, the DSTAMP property is in the format "yyyyMMdd",
+         TSTAMP is in the format "hhmm", and TODAY is in the format
+         "MMMM dd yyyy". -->
+    <tstamp/>
+
+    <!-- External directories for the source files to the various libs -->
+    <property name="jconfigDir"         value="${rootLibDir}/jConfig/1.3"/>
+    <property name="jOrbisDir"          value="${rootLibDir}/jorbis/latest"/>
+    <property name="kiwiDir"            value="${rootLibDir}/kiwi"/>
+    <property name="roarDir"            value="${rootLibDir}/last.fm/trunk"/>
+    <property name="izPackBinDir"       value="${izPackHomeDir}/bin"/>
+    <property name="imagesDir"          value="${rootLibDir}/images/"/>
+    <property name="webartsDir"         value="${srcRoot}/open/trunk/projects/WebARTS"/>
+    <property name="jOggPlayerDir"      value="${srcRoot}/open/trunk/projects/jOggPlayer"/>
+    <property name="webDistributionDir" value="${srcRoot}/closed/trunk/www/jOggPlayer/downloads"/>
+    <property name="jOrbisJar"          value="${jOrbisDir}/jorbis-0.0.11.jar"/>
+    <property name="kiwiJar"            value="${kiwiDir}/kiwi.jar"/>
+
+    <property name="webartsSrc"       value="${webartsDir}/ca/bc/webarts"/>
+    <property name="jOggSrcDir"       value="${jOggPlayerDir}/ca/bc/webarts"/>
+    <property name="widgetsSrcDir"    value="${webartsSrc}/widgets"/>
+    <property name="toolsSrcDir"      value="${webartsSrc}/tools"/>
+    <property name="lastfmSrcDir"     value="${roarDir}/src"/>
+    <property name="kiwiSrcDir"       value="${kiwiDir}/kiwi"/>
+    <property name="kiwiClassesDir"   value="${kiwiDir}/kiwi"/>
+
+    <property name="distributionSource"  value="${distributionDir}/src"/>
+    <property name="distributionDocs"    value="${distributionDir}/docs"/>
+    <property name="distributionLib"     value="${distributionDir}/classes"/>
+    <property name="distributionClasses" value="${distributionLib}"/>
+    <property name="distributionImages"  value="${distributionLib}/images"/>
+    <property name="jarManifest"         value="${jOggPlayerDir}/jOggPlayerManifest.txt"/>
+    <property name="autoJarManifest"     value="${jOggPlayerDir}/autoJOggPlayerManifest.txt"/>
+    <property name="xtrajOggPlayerDistFiles"
+             value="jOggPlayer.cmd,jOggPlayer.bat,jOggPlayer_Winnt.bat,jOggPlayer.desktop,jOggPlayer.sh,jOggPlayer.term,jOggPlayer.OSX.command,License.txt,readme.txt,startup2.ogg,applet.html,create_os2_desktop_joggplayer_object.CMD,java2.cmd,jOggPlayer.ico,jOggPlayerJava2.cmd"/>
+    <property name="xtraWebartsDistFiles" value="java2.cmd"/>
+    <property name="distSourceZipName"   value="jOgg${version}s.zip"/>
+    <property name="distZipName"         value="jOgg${version}.zip"/>
+
+    <property name="playerFile"       value="jOggPlayer.java"/>
+    <property name="autoPlayerFile"   value="JOggPlayerAutoUpdating.java"/>
+    <property name="includeJars"      value="${jOrbisJar};${kiwiJar}"/>
+
+    <!-- Make the required directories for the build -->
+    <mkdir dir="${buildDir}"/>
+    <mkdir dir="${distributionDir}"/>
+    <mkdir dir="${distributionClasses}"/>
+    <mkdir dir="${distributionSource}"/>
+    <mkdir dir="${distributionDocs}"/>
+    <mkdir dir="${distributionLib}"/>
+    <mkdir dir="${distributionLib}/gnu/regexp"/>
+    <mkdir dir="${distributionImages}"/>
+    <mkdir dir="${distributionImages}/textures"/>
+
+    <property name="classes"          value="${distributionClasses}"/>
+  </target>
+
+
+  <target name="run"
+          depends="jOggPlayerDist"
+          description="Builds and runs jOggPlayer.">
+    <java classname="ca.bc.webarts.jOggPlayer"
+          classpath="${distributionClasses}"
+          fork="true" />
+  </target>
+
+
+  <target name="compileTools"
+          depends="-distributionInit"
+          description="Compiles the WebARTS Tools Files from ${webartsSrc}/tools into ${classes}">
+    <!-- Compile the ${widgetFiles} code from ${webartsSrc} into ${classes} -->
+    <javac srcdir="${toolsSrcDir}"
+           destdir="${distributionClasses}"
+           classpath="${distributionClasses}"
+           source="1.5"
+           target="1.5"
+           includes="AutoUpdateApp.java,JOrb*,Log.java,Native*"
+           debug="on"/>
+       <!--
+       excludes="DBTables.java,CreateDBTab*.java,XmlValidator.java,DbXmlRetriever.java,PDF*.java,Crop*.java,CategorizedStackedBarChart.java,SQL*,Binary*,Rename*" -->
+  </target>
+
+
+  <target name="compileWidgets"
+          depends="-distributionInit,compileTools"
+          description="Compiles the WebARTS Widgets Files from ${widgetsSrcDir} into ${distributionClasses}">
+    <!-- Compile the ${widgetFiles} code from ${webartsSrc} into ${classes} -->
+    <echo message="Compiles the WebARTS Widgets Files from ${widgetsSrcDir} into ${distributionClasses}" />
+    <javac srcdir="${widgetsSrcDir}"
+           destdir="${distributionClasses}"
+           classpath="${distributionClasses}"
+           source="1.5"
+           target="1.5"
+           excludes="JDBCAdapter.java,led\*,random\*,PlayList.java,VorbisInfo.java,Scrobble.java"
+           debug="on"/>
+    <echo message="" />
+    <echo message="Compiles the WebARTS Widgets Files from ${jOggSrcDir}/widgets into ${distributionClasses}" />
+    <javac srcdir="${jOggSrcDir}/widgets"
+           destdir="${distributionClasses}"
+           classpath="${distributionClasses}"
+           source="1.5"
+           target="1.5"
+           debug="on" />
+    <javac srcdir="${widgetsSrcDir}/dnd"
+           destdir="${distributionClasses}"
+           classpath="${distributionClasses}"
+           source="1.5"
+           target="1.5"
+           debug="on"/>
+    <copy todir="${distributionClasses}/ca/bc/webarts/widgets">
+      <fileset dir="${widgetsSrcDir}">
+        <include name="DropDownButtonIcon.jpg"/>
+     </fileset>
+    </copy>
+  </target>
+
+
+  <target name="compilejOggPlayer"
+          depends="-distributionInit,compileTools,compileWidgets"
+          description="Compiles the jOggPlayer Files from ${src} into ${classes}">
+    <!-- Compile the java code from ${src} into ${classes} -->
+    <javac srcdir="${jOggSrcDir}"
+           destdir="${distributionClasses}"
+           includes="${playerFile} ${autoPlayerFile}"
+           classpath="${distributionClasses}"
+           source="1.5"
+           target="1.5"
+           debug="on"/>
+  </target>
+
+
+  <target name="toolsDist"
+          depends="-distributionInit"
+          description="Copy ALL tools Classes/Sources required
+                       for the jOggPlayer Distribution.">
+
+    <!-- Copy tools files -->
+    <copy todir="${distributionSource}/ca/bc/webarts/tools">
+      <fileset dir="${toolsSrcDir}">
+        <include name="JOrbisComment.java"/>
+        <include name="Log.java"/>
+        <include name="AutoUpdat*.java"/>
+        <include name="Stream*.java"/>
+      </fileset>
+    </copy>
+    <copy todir="${distributionLib}/ca/bc/webarts/tools">
+      <fileset dir="${classes}/ca/bc/webarts/tools">
+         <include name="Log.class" />
+         <include name="AutoUpdat*.class"/>
+         <include name="Stream*.class"/>
+      </fileset>
+    </copy>
+
+  </target>
+
+
+  <target name="widgetsDist"
+          depends="-distributionInit,compileWidgets"
+          description="Copy ALL Webarts Widgets Classes/Sources required
+                       for the jOggPlayer Distribution.">
+
+     <!-- Copy widgets files -->
+    <copy todir="${distributionSource}/ca/bc/webarts/widgets/dnd">
+      <fileset dir="${widgetsSrcDir}/dnd">
+        <include name="*.java"/>
+      </fileset>
+    </copy>
+    <copy todir="${distributionSource}/ca/bc/webarts/widgets">
+      <fileset dir="${widgetsSrcDir}">
+        <include name="ColouredLabel.java"/>
+        <include name="JAboutBox.java"/>
+        <include name="Splash.java"/>
+        <include name="Util.java"/>
+        <include name="PopUpButton.java"/>
+        <include name="JCheckDropDown.java"/>
+        <include name="DropDownButtonIcon.jpg"/>
+        <include name="OggFileRef.java"/>
+        <include name="ExampleFileFilter.java"/>
+        <include name="ImageCanvas.java"/>
+        <include name="FirewallAuthenticator.java"/>
+      </fileset>
+    </copy>
+    <copy todir="${distributionLib}/ca/bc/webarts/widgets/dnd">
+      <fileset dir="${classes}/ca/bc/webarts/widgets/dnd">
+        <include name="*.class"/>
+      </fileset>
+    </copy>
+    <copy todir="${distributionLib}/ca/bc/webarts/widgets">
+      <fileset dir="${classes}/ca/bc/webarts/widgets">
+        <include name="ColouredLa*.class"/>
+        <include name="JAboutB*.class"/>
+        <include name="Splash.class"/>
+        <include name="Util.class"/>
+        <include name="PlayList.class"/>
+        <include name="PopUpBut*.class"/>
+        <include name="JCheckDrop*.class"/>
+        <include name="DropDownButtonIcon.jpg"/>
+        <include name="OggFileRef.class"/>
+        <include name="ExampleFileFilter.class"/>
+        <include name="ImageCanvas.class"/>
+        <include name="FirewallAuthenticator.class"/>
+        <include name="VorbisInfo.class"/>
+      </fileset>
+    </copy>
+    <copy todir="${distributionSource}/ca/bc/webarts/widgets">
+      <fileset dir="${jOggSrcDir}/widgets">
+        <include name="PlayList.java"/>
+        <include name="VorbisInfo.java"/>
+      </fileset>
+    </copy>
+
+    <echo message="Copying gnu class files to ${distributionLib}/gnu/regexp :"/>
+    <echo message="${pkgs}/gnu/regexp"/>
+    <copy todir="${distributionLib}/gnu/regexp" verbose="false">
+      <fileset dir="${packageDir}/gnu/regexp">
+        <include name="*.class"/>
+      </fileset>
+    </copy>
+  </target>
+
+
+  <target name="kiwiDist"
+          depends="-distributionInit"
+          description="Copy ALL Kiwi Classes/Sources required
+                       for the jOggPlayer Distribution.">
+    <!-- Copy the nedded Kiwi Code -->
+    <copy todir="${distributionLib}/kiwi">
+      <fileset dir="${kiwiDir}" >
+        <include name="license.html"/>
+        <include name="readme"/>
+      </fileset>
+    </copy>
+
+    <!-- Source files -->
+    <echo message="Copying kiwi source files to ${distributionSource}/kiwi :"/>
+    <echo message="${kiwiSrcDir}"/>
+
+    <copy todir="${distributionSource}/kiwi">
+      <fileset dir="${kiwiSrcDir}" >
+        <include name="*.java"/>
+        <include name="ui/*.java"/>
+        <include name="util/*.java"/>
+        <include name="event/PropertyChangeSource.java"/>
+        <include name="event/ChangeSupport.java"/>
+        <include name="text/ParsingException.java"/>
+      </fileset>
+    </copy>
+
+    <!-- Class files -->
+    <echo message="Compiling kiwi class files to ${distributionLib}/kiwi :"/>
+    <echo message="from: ${kiwiClassesDir}"/>
+
+    <copy todir="${distributionLib}/kiwi">
+      <fileset dir="${kiwiClassesDir}" >
+        <include name="textures/clouds.jpg"/>
+      </fileset>
+    </copy>
+    <javac srcdir="${kiwiSrcDir}"
+       destdir="${distributionLib}"
+       classpath="${classes}:${kiwiClassesDir}"
+           source="1.5"
+           target="1.5"
+       excludes="**/AudioClip.java"
+       debug="on"/>
+
+  </target>
+
+
+  <target name="jOrbisDist"
+          depends="-distributionInit"
+          description="Copy ALL jOrbis Classes/Sources required
+                       for the jOggPlayer Distribution.">
+    <!-- Source files -->
+    <copy todir="${distributionSource}/com">
+      <fileset dir="${jOrbisDir}/com">
+        <include name="**/*.java"/>
+      </fileset>
+    </copy>
+
+    <!-- Class files -->
+    <copy todir="${distributionLib}/com">
+      <fileset dir="${jOrbisDir}/com">
+        <include name="**/*.class"/>
+      </fileset>
+    </copy>
+
+    <copy todir="${distributionLib}/com/jcraft">
+      <fileset dir="${jOrbisDir}">
+        <include name="README"/>
+        <include name="COPYING.LIB"/>
+      </fileset>
+    </copy>
+  </target>
+
+
+  <target name="lastfmDist"
+          depends="-distributionInit"
+          description="Copy ALL Roar Software last.fm API Classes/Sources required
+                       for the jOggPlayer Distribution.">
+    <!-- Source files -->
+    <copy todir="${distributionSource}/net">
+      <fileset dir="${lastfmSrcDir}/net">
+        <include name="**/*.java"/>
+      </fileset>
+    </copy>
+
+    <!-- Class files -->
+    <copy todir="${distributionLib}/net">
+      <fileset dir="${roarDir}/bin/production/last.fm/net">
+        <include name="**/*.class"/>
+      </fileset>
+    </copy>
+
+  </target>
+
+
+  <target name="jConfigDist"
+          depends="-distributionInit"
+          description="Copy ALL jConfig Classes/Sources required
+                       for the jOggPlayer Distribution.">
+    <!-- Source files -->
+    <echo message="Copying jConfig source files to ${distributionSource} :"/>
+    <echo message="from: ${kiwiClassesDir}"/>
+
+    <copy todir="${distributionSource}" verbose="true">
+      <fileset dir="${jconfigDir}/src">
+        <include name="**/*.java"/>
+        <exclude name="examples/*.*"/>
+      </fileset>
+    </copy>
+
+    <!-- Class files -->
+    <echo message="Copying jConfig class files to ${distributionLib} :"/>
+    <echo message="from: ${jconfigDir}/classes"/>
+
+    <copy todir="${distributionLib}" verbose="true">
+      <fileset dir="${jconfigDir}/classes">
+        <include name="**/*.class"/>
+      </fileset>
+    </copy>
+    <!--javac srcdir="${jconfigDir}/src"
+       destdir="${distributionLib}"
+       classpath="${classes}:${kiwiClassesDir}"
+       excludes=""
+           source="1.5"
+           target="1.5"
+       debug="on"/-->
+
+    <copy todir="${distributionLib}">
+      <fileset dir="${jconfigDir}/docs">
+        <include name="jConfig.*"/>
+      </fileset>
+      <fileset dir="${jconfigDir}">
+        <include name="README"/>
+      </fileset>
+    </copy>
+  </target>
+
+
+  <target name="jOggPlayerDist"
+          depends="-distributionInit,compilejOggPlayer,widgetsDist,toolsDist,kiwiDist,jOrbisDist,lastfmDist,jConfigDist"
+          description="Copy ALL jOggPlayer Classes/Sources required
+                       for the jOggPlayer Distribution.">
+
+    <!-- the following build file is to be renamed as it is copied -->
+    <copy tofile="${distributionSource}/build.xml"
+          file="${jOggPlayerDir}/build.xml"/>
+
+    <!-- Copy jOggPlayer src files -->
+    <copy todir="${distributionSource}/ca/bc/webarts">
+      <fileset dir="${jOggPlayerDir}/ca/bc/webarts">
+         <include name="${playerFile}"/>
+         <include name="${autoPlayerFile}"/>
+      </fileset>
+    </copy>
+
+    <!-- Copy jOggPlayer class files -->
+    <copy todir="${distributionLib}/ca/bc/webarts">
+      <fileset dir="${classes}/ca/bc/webarts">
+         <include name="jOgg*.class" />
+         <include name="JOgg*.class" />
+      </fileset>
+    </copy>
+    <copy todir="${distributionDir}"> <!-- needed for izpack -->
+      <fileset dir="${jOggPlayerDir}">
+         <include name="AutoUpdatingJOggPlayer.prop" />
+      </fileset>
+    </copy>
+    <copy todir="${distributionLib}">
+      <fileset dir="${jOggPlayerDir}">
+         <include name="AutoUpdatingJOggPlayer.prop" />
+      </fileset>
+    </copy>
+
+  </target>
+
+
+  <target name="copyImageFiles"
+          description="Copy image files to the ${distributionImages} dir.">
+    <!-- copy image files -->
+    <copy todir="${distributionLib}/org">
+      <fileset dir="${imagesDir}/org"/>
+    </copy>
+    <copy todir="${distributionImages}" file="${imagesDir}/jOggPlayerIcon.jpg"/>
+    <copy todir="${distributionImages}" file="${imagesDir}/dont_pan.jpg"/>
+    <copy todir="${distributionImages}" file="${imagesDir}/miniCloseButtonImage.jpg"/>
+    <copy todir="${distributionImages}" file="${imagesDir}/miniViewButtonImage.jpg"/>
+    <copy todir="${distributionImages}/textures">
+      <fileset dir="${imagesDir}/textures"
+         includes="*.gif,*.jpg" />
+    </copy>
+
+  </target>
+
+
+  <target name="copyRootDirFiles" depends="-distributionInit"
+          description="Copy the files that live in the root distribution dir: ${distributionDir}.">
+    <!-- Copy the readme and start script files -->
+    <copy todir="${distributionDir}">
+      <fileset dir="${jOggPlayerDir}"
+         includes="${xtrajOggPlayerDistFiles}" />
+    </copy>
+    <copy todir="${distributionDir}">
+      <fileset dir="${webartsDir}"
+         includes="${xtraWebartsDistFiles}" />
+    </copy>
+
+  </target>
+
+
+  <target name="buildJars"
+          depends="newjOggJar,
+                   newAutojOggJar"
+          description="Jars up the 2 jOgg Jar files INCLUDING the AutoUpdate app Jar.">
+  </target>
+
+
+  <target name="newjOggJar"
+          depends="-distributionInit,
+                   kiwiDist,
+                   jOrbisDist,
+                   lastfmDist,
+                   jConfigDist,
+                   copyImageFiles,
+                   jOggPlayerDist,
+                   jOggJar"
+          description="Recompiles and Jars up only the jOggPlayer Jar." />
+
+
+  <target name="jOggJar"
+          depends="-distributionInit"
+          description="Jars up only the jOggPlayer Jar.">
+
+    <!-- Put everything in ${distributionLib} jar file -->
+    <jar jarfile="${distributionDir}/jOggPlayer.jar"
+         basedir="${distributionLib}"
+         manifest="${jarManifest}"/>
+    <!-- Sign The Jar File -->
+    <echo> Signing the ${distributionDir}/jOggPlayer.jar with
+    keypass=${key.pass}
+    storepass=${store.pass}</echo>
+    <signjar jar="${distributionDir}/jOggPlayer.jar"
+             keystore="/home/tgutwin/.keystore"
+             alias="mykey"
+             keypass="${key.pass}"
+             storepass="${store.pass}"/>
+
+  </target>
+
+
+  <target name="newAutojOggJar"
+          depends="-distributionInit,
+                   jOggPlayerDist,
+                   kiwiDist,
+                   jOrbisDist,
+                   lastfmDist,
+                   jConfigDist,
+                   copyImageFiles,
+                   autojOggJar"
+          description="Recompiles and Jars up only the AutoUpdatingJOggPlayer Jar." />
+
+
+  <target name="autojOggJar"
+          depends="-distributionInit"
+          description="Jars up only the AutoUpdatingJOggPlayer Jar.">
+
+    <jar jarfile="${distributionDir}/AutoUpdatingJOggPlayer.jar"
+         basedir="${distributionLib}"
+         includes="ca/bc/webarts/JOggPlayerAutoUpdat*.class
+                   ca/bc/webarts/tools/AutoUpdat*.class
+                   ca/bc/webarts/tools/Strea*.class
+                   ca/bc/webarts/tools/Log.class
+                   ca/bc/webarts/widgets/ExampleFileFilter.class
+                   ca/bc/webarts/widgets/Util.class
+                   AutoUpdatingJOggPlayer.prop"
+         manifest="${autoJarManifest}"/>
+    <!-- Sign The Jar File -->
+    <echo> Signing the ${distributionDir}/AutoUpdatingJOggPlayer.jar with
+    keypass=${key.pass}
+    storepass=${store.pass}</echo>
+    <signjar jar="${distributionDir}/AutoUpdatingJOggPlayer.jar"
+             keystore="/home/tgutwin/.keystore"
+             alias="mykey"
+             keypass="${key.pass}"
+             storepass="${store.pass}"/>
+
+  </target>
+
+
+  <target name="signjOggJar"
+          depends="-distributionInit"
+          description="Signs the jOggPlayer Jar.">
+
+    <!-- Sign The Jar File -->
+    <echo> Signing the ${distributionDir}/jOggPlayer.jar with
+    keypass=${key.pass}
+    storepass=${store.pass}</echo>
+    <signjar jar="${distributionDir}/jOggPlayer.jar"
+             keystore="/home/tgutwin/.keystore"
+             alias="mykey"
+             keypass="${key.pass}"
+             storepass="${store.pass}"/>
+
+  </target>
+
+
+  <target name="signAutojOggJar"
+          depends="-distributionInit"
+          description="Signs the AutoUpdatingJOggPlayer Jar.">
+
+    <!-- Sign The Jar File -->
+    <echo> Signing the ${distributionDir}/AutoUpdatingJOggPlayer.jar with
+    keypass=${key.pass}
+    storepass=${store.pass}</echo>
+    <signjar jar="${distributionDir}/AutoUpdatingJOggPlayer.jar"
+             keystore="/home/tgutwin/.keystore"
+             alias="mykey"
+             keypass="${key.pass}"
+             storepass="${store.pass}"/>
+
+  </target>
+
+
+  <target name="jarFilesNoLibraries"
+          description="Jars up only the jOggPlayer Jar and does not include the required kiwi AND jorbis library files.">
+    <!-- Put everything in ${distributionLib} jar file -->
+    <jar jarfile="${distributionDir}/jOggPlayerSlim.jar"
+         basedir="${distributionLib}"
+         excludes="com/**,kiwi/**"
+         manifest="${jarManifest}"/>
+
+    <!-- Sign The Jar File -->
+    <echo> Signing the ${distributionDir}/jOggPlayerSlim.jar with
+    keypass=${key.pass}
+    storepass=${store.pass}</echo>
+    <signjar jar="${distributionDir}/jOggPlayerSlim.jar"
+             keystore="/home/tgutwin/.keystore"
+             alias="mykey"
+             keypass="${key.pass}"
+             storepass="${store.pass}"/>
+
+  </target>
+
+
+  <target name="jOggDocsDist" depends="-distributionInit,jOggPlayerDist,kiwiDist,jOrbisDist,lastfmDist,jConfigDist">
+     <!-- echo message="${javaBin}\javadoc.exe -sourcepath ${distributionSource} -classpath ${distributionLib} -private  com ca.bc.webarts kiwi"/ -->
+     <!-- exec dir="${distributionLib}" executable="${javaBin}\javadoc.exe" >
+       <arg line="-sourcepath ${distributionSource} -d ${distributionDocs} -classpath ${distributionLib} -private  com.jcraft.jogg com.jcraft.jorbis ca.bc.webarts ca.bc.webarts.widgets kiwi"/>
+     </exec -->
+    <javadoc packagenames="com.jcraft.jogg,com.jcraft.jorbis,org.jconfig,ca.bc.webarts,ca.bc.webarts.tools,ca.bc.webarts.widgets,ca.bc.webarts.widgets.dnd,kiwi.util,kiwi.event,kiwi.text,kiwi.ui,kiwi"
+              sourcepath="${distributionSource}"
+              classpath="${distributionLib};${classes};${kiwiClassesDir}"
+              private="true"
+              destdir="${distributionDocs}"
+              author="true"
+              version="false"
+              source="1.5"
+              use="true">
+     </javadoc>
+  </target>
+
+
+  <target name="buildSourceDistributionZips"
+          depends="copyRootDirFiles,
+                   jOggDocsDist,
+                   cleanDistributionClassFiles">
+
+    <!-- zip the Distribution Up -->
+    <zip zipfile="${jOggSrcDir}/${appName}${version}s.zip">
+      <fileset dir="${distributionDir}"
+               includes="**/*.*"
+               excludes="*.zip,*-install.jar"/>
+      <!--fileset dir="${jOggSrcDir}" includes="jOggPlayer.prop"/-->
+    </zip>
+
+    <zip zipfile="${jOggSrcDir}/AutoUpdate_${appName}${version}.zip">
+      <!--fileset dir="${jOggSrcDir}" includes="jOggPlayer.prop"/-->
+      <fileset dir="${distributionDir}"
+          includes="AutoUpdatingJOggPlayer.jar"/>
+    </zip>
+
+    <move file="${jOggSrcDir}/AutoUpdate_${appName}${version}.zip"
+          todir="${distributionDir}"/>
+    <move file="${jOggSrcDir}/${appName}${version}s.zip"
+          todir="${distributionDir}"/>
+
+  </target>
+
+
+  <target name="webDistributionSource"
+          depends="buildSourceDistributionZips,copyWebDistributionSource">
+  </target>
+
+  <target name="copyWebDistributionSource"
+          depends="-distributionInit">
+    <delete file="${webDistributionDir}/jOggPlayer.jar"
+            verbose="true"/>
+    <copy file="${distributionDir}/jOggPlayer.jar"
+          todir="${webDistributionDir}"/>
+
+    <delete file="${webDistributionDir}/AutoUpdate_${appName}${version}.zip"
+            verbose="true"/>
+    <copy file="${distributionDir}/AutoUpdate_${appName}${version}.zip"
+          todir="${webDistributionDir}"/>
+
+    <delete file="${webDistributionDir}/${shortAppName}${version}s.zip"
+            verbose="true"/>
+    <copy file="${distributionDir}/${appName}${version}s.zip"
+          tofile="${webDistributionDir}/${shortAppName}${version}s.zip"/>
+
+    <delete dir="${webDistributionDir}/docs/api"
+            includeemptydirs="true"
+            verbose="false"/>
+    <copy overwrite="true"
+          todir="${webDistributionDir}/docs/api"
+          verbose="false">
+      <fileset dir="${distributionDir}/docs" />
+    </copy>
+  </target>
+
+
+  <target name="distributionNoSource"
+       depends="buildSourceDistributionZips,
+                cleanDistributionSourceFiles">
+    <!-- The Zip Excludes does NOT work ... so Kludge -->
+    <copy file="${distributionDir}/${appName}${version}s.zip"
+          todir="${jOggSrcDir}" overwrite="yes"/>
+    <delete file="${distributionDir}/${appName}${version}s.zip"/>
+
+    <!-- zip the Distribution Up -->
+    <zip zipfile="${jOggSrcDir}/${appName}${version}.zip"
+       basedir="${distributionDir}"/>
+
+    <copy file="${jOggSrcDir}/${appName}${version}.zip"
+          todir="${distributionDir}" overwrite="yes"/>
+
+    <!-- The Zip Excludes does NOT work ... so Kludge -->
+    <copy file="${jOggSrcDir}/${appName}${version}s.zip"
+          todir="${distributionDir}" overwrite="yes"/>
+    <delete file="${jOggSrcDir}/${appName}${version}.zip"/>
+    <delete file="${jOggSrcDir}/${appName}${version}s.zip"/>
+  </target>
+
+
+  <target name="fullDistributionSet"
+       depends="distributionNoLibraries,
+                distributionNoSource">
+
+  </target>
+
+
+  <target name="distributionNoLibraries"
+       depends="-distributionInit,
+               jOggPlayerDist,
+               copyImageFiles,
+               copyRootDirFiles,
+               cleanDistributionSourceFiles,
+               jarFilesNoLibraries,
+               cleanDistributionClassFiles">
+    <!-- The Zip Excludes does NOT work ... so Kludge -->
+    <copy file="${distributionDir}/${appName}${version}s.zip"
+          todir="${jOggSrcDir}" overwrite="yes"/>
+    <delete file="${distributionDir}/${appName}${version}s.zip"/>
+    <copy file="${distributionDir}/${appName}${version}.zip"
+          todir="${jOggSrcDir}" overwrite="yes"/>
+    <delete file="${distributionDir}/${appName}${version}.zip"/>
+
+    <!-- zip the Distribution Up -->
+    <zip zipfile="${jOggSrcDir}/${appName}${version}Slim.zip"
+       basedir="${distributionDir}"/>
+
+    <!-- The Zip Excludes does NOT work ... so Kludge -->
+    <copy file="${jOggSrcDir}/${appName}${version}Slim.zip"
+          todir="${distributionDir}" overwrite="yes"/>
+    <copy file="${jOggSrcDir}/${appName}${version}.zip"
+          todir="${distributionDir}"/>
+    <copy file="${jOggSrcDir}/${appName}${version}s.zip"
+          todir="${distributionDir}"/>
+    <delete file="${jOggSrcDir}/${appName}${version}Slim.zip"/>
+    <delete file="${jOggSrcDir}/${appName}${version}s.zip"/>
+    <delete file="${jOggSrcDir}/${appName}${version}.zip"/>
+  </target>
+
+
+  <target name="buildInstaller" depends="-distributionInit,buildSourceDistributionZips">  <!-- depends="buildSourceDistributionZips" -->
+    <copy todir="${distributionDir}">
+      <fileset dir="${jOggPlayerDir}">
+        <include name="installDir-*.txt"/>
+        <include name="*.prop"/>
+      </fileset>
+    </copy>
+
+     <!--echo message="java -jar ${izPackBinDir}/../lib/compiler.jar -HOME ${izPackBinDir}/../ ${jOggPlayerDir}/installjOggPlayer.xml -o ${distributionDir}/jOggPlayer${version}-install.jar -b ${distributionDir}"/-->
+     <!--
+     <exec dir="${izPackBinDir}" executable="java" >
+       <arg line="-jar ${izPackBinDir}/../lib/compiler.jar -HOME ${izPackBinDir}/../ ${jOggPlayerDir}/installjOggPlayer.xml -o ${distributionDir}/jOggPlayer${version}-install.jar -b ${distributionDir}"/>
+     </exec>
+     -->
+     <izpack input="${jOggPlayerDir}/installjOggPlayer.xml"
+             output="${distributionDir}/jOggPlayer${version}-install.jar"
+             installerType="standard-kunststoff"
+             basedir="${distributionDir}"
+             izPackDir="${izPackHomeDir}/"/>
+
+  </target>
+
+
+  <target name="cleanDistributionClassFiles" depends="splashGraphic">
+    <!-- Remove the classes -->
+    <delete dir="${distributionDir}/classes"/>
+  </target>
+
+
+  <target name="cleanDistributionSourceFiles" depends="splashGraphic">
+    <!-- Remove the classes -->
+    <delete dir="${distributionDir}/src"/>
+  </target>
+
+
+  <target name="cleanDist" depends="splashGraphic">
+    <delete includeEmptyDirs="true" >
+     <fileset dir="${distributionDir}" />
+    </delete>
+  </target>
+
+
+  <target name="cleanAll" depends="cleanDist">
+  </target>
+
+
+  <target name="rebuildjOggPlayer" depends="cleanDistributionClassFiles,newjOggJar">
+    <!-- Cleans the jOggPlayer classes and rebuilds Only jOggPlayer -->
+  </target>
+
+
+  <target name="rebuildAutojOggPlayer" depends="cleanDistributionClassFiles,newAutojOggJar">
+    <!-- Cleans the jOggPlayer classes and rebuilds Only jOggPlayer -->
+  </target>
+
+
+  <target name="rebuildJars" depends="cleanDistributionClassFiles,buildJars">
+    <!-- Cleans the jOggPlayer classes and rebuilds Only jOggPlayer -->
+  </target>
+
+
+  <target name="rebuildInstaller" depends="cleanDist,-distributionInit,buildInstaller">
+    <!-- Cleans Dist dir and rebuilds Everything -->
+  </target>
+
+</project>

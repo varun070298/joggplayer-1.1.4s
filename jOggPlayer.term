@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist SYSTEM "file://localhost/System/Library/DTDs/PropertyList.dtd">
+<plist version="0.9">
+<dict>
+	<key>WindowSettings</key>
+	<array>
+		<dict>
+			<key>AutoFocus</key>
+			<string>NO</string>
+			<key>Autowrap</key>
+			<string>YES</string>
+			<key>Bell</key>
+			<string>NO</string>
+			<key>BlinkCursor</key>
+			<string>NO</string>
+			<key>Columns</key>
+			<string>76</string>
+			<key>CursorShape</key>
+			<string>1</string>
+			<key>CustomTitle</key>
+			<string>Hit ctrl+C in this window to exit jOggPlayer</string>
+			<key>DisableAnsiColors</key>
+			<string>NO</string>
+			<key>DoubleBold</key>
+			<string>YES</string>
+			<key>ExecutionString</key>
+			<string>set JOGGPLAYER_HOME=~/jOggPlayer;java -jar ${JOGGPLAYER_HOME}/jOggPlayer.jar ${JOGGPLAYER_HOME}/startup2.ogg;exit</string>
+			<key>FontHeightSpacing</key>
+			<string>1</string>
+			<key>FontWidthSpacing</key>
+			<string>1</string>
+			<key>IsMiniaturized</key>
+			<string>NO</string>
+			<key>Keypad</key>
+			<string>NO</string>
+			<key>Meta</key>
+			<string>-1</string>
+			<key>NSFixedPitchFont</key>
+			<string>VT100</string>
+			<key>NSFixedPitchFontSize</key>
+			<real>8.000000000000000e+00</real>
+			<key>Rows</key>
+			<string>8</string>
+			<key>SaveLines</key>
+			<string>10000</string>
+			<key>Scrollback</key>
+			<string>NO</string>
+			<key>Shell</key>
+			<string></string>
+			<key>ShellExitAction</key>
+			<string>2</string>
+			<key>SourceDotLogin</key>
+			<string>YES</string>
+			<key>StrictEmulation</key>
+			<string>NO</string>
+			<key>TerminalOpaqueness</key>
+			<real>5.500000000000000e-01</real>
+			<key>TextColors</key>
+			<string>0.000 0.000 0.000 1.000 1.000 1.000 0.000 0.000 0.000 0.000 0.000 0.000 1.000 1.000 1.000 0.000 0.000 0.000 0.666 0.666 0.666 0.333 0.333 0.333 </string>
+			<key>TitleBits</key>
+			<string>8</string>
+			<key>Translate</key>
+			<string>YES</string>
+			<key>WinLocULY</key>
+			<string>726</string>
+			<key>WinLocX</key>
+			<string>287</string>
+			<key>WinLocY</key>
+			<string>0</string>
+		</dict>
+	</array>
+</dict>
+</plist>

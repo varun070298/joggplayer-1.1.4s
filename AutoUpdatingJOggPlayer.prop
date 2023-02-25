@@ -1,0 +1,7 @@
+# Java Remote Application Description property file
+appType=java
+remoteAppURL=jOggPlayer.jar
+#remoteAppDownloadURL=http://www.webarts.bc.ca/Download?resource=http://joggplayer.webarts.bc.ca/jOggPlayer.jar
+remoteAppDownloadURL=http://joggplayer.webarts.bc.ca/jOggPlayer.jar
+remoteAppAutoDownload=true
+

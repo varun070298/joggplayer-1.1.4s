@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.1.4
+Encoding=Legacy-Mixed
+Name[de]=jOggPlayer - Spieler Vorbis Ogg
+Name[en]=jOggPlayer Vorbis Ogg
+Name=jOggPlayer Vorbis Ogg
+MultipleArgs=true
+Icon=/opt/jOggPlayer/jOggPlayer.png
+MimeType=application/ca.bc.webarts.jOggPlayer
+Type=Application
+Terminal=true
+Exec=/opt/jOggPlayer/jOggPlayer.sh
